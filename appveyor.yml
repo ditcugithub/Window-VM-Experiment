@@ -27,8 +27,19 @@ build_script:
   # Step 5: Fetch Ngrok Tunnels Information
   - ps: Invoke-WebRequest http://localhost:4040/api/tunnels
 
-  # Step 6: Run indefinitely using a PowerShell loop
+  # Step 6: Simulate random tasks like network checks, downloading, and file creation
   - ps: |
+      $tasks = @(
+        { Write-Host "Checking network connection..."; Test-Connection -ComputerName google.com -Count 2 },
+        { Write-Host "Downloading random file..."; Invoke-WebRequest -Uri "https://example.com" -OutFile "randomFile.txt" },
+        { Write-Host "Creating random file..."; $randomText = Get-Random -Minimum 1 -Maximum 100; Set-Content -Path "file_$randomText.txt" -Value "Random content $randomText" },
+        { Write-Host "Sending a web request..."; Invoke-WebRequest -Uri "https://httpbin.org/get" },
+        { Write-Host "Checking disk space..."; Get-PSDrive -Name C },
+        { Write-Host "Simulating CPU load..."; $x = 1..5000000 | ForEach-Object {$_ * 2} }
+      )
+
       while ($true) {
+          $randomTask = Get-Random -InputObject $tasks
+          & $randomTask
           Start-Sleep -Seconds 10
       }
