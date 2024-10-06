@@ -30,5 +30,5 @@ build_script:
   # Step 6: Run indefinitely using a PowerShell loop
   - ps: |
       while ($true) {
-          Start-Sleep -Seconds 60
+          Start-Sleep -Seconds 10
       }
