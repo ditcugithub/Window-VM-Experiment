@@ -1,0 +1,41 @@
+version: 1.0.{build}
+image: Visual Studio 2022
+
+# Define the build job
+build:
+  project: MyWindowsProject
+
+jobs:
+  - name: Build and Setup Ngrok
+    environment:
+      matrix:
+        - image: Visual Studio 2022
+
+    # Define the steps for this job
+    steps:
+      # Step 1: Download Ngrok
+      - ps: |
+          Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+          Expand-Archive -Path ngrok.zip -DestinationPath .\ngrok
+
+      # Step 2: Set up the Ngrok Token
+      - ps: |
+          .\ngrok\ngrok.exe authtoken 28JYgftH5GZ3fQ7n261rSg02sVp_7FwDqjxuoagKqFTZo7MMd
+          Start-Process PowerShell -ArgumentList '-Noexit -Command ".\ngrok\ngrok.exe tcp 3389"'
+
+      # Step 3: Enable RDP Access
+      - ps: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+
+      # Step 4: Create a new user "haidanh" with the password "H@i03052008"
+      - ps: |
+          net user haidanh H@i03052008 /add
+          net localgroup administrators haidanh /add
+
+      # Step 5: Fetch Ngrok Tunnels Information
+      - ps: Invoke-WebRequest http://localhost:4040/api/tunnels
+
+      # Step 6: Keep the process running (loop)
+      - ps: Start-Sleep -Seconds 3600
